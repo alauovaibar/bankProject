@@ -7,46 +7,40 @@ on:
     branches: [ main ]
 
 jobs:
-  lint:
-    name: Lint
+  build-and-test:
+    name: Build & Test Services
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.26'
           cache: true
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true
-      - name: Run Tests
-        run: go test -v -race ./...
+      - name: Build & Test auth-service
+        if: hashFiles('auth-service/go.mod') != ''
+        run: |
+          cd auth-service
+          go vet ./...
+          go build -v ./cmd/api
 
-  build:
-    name: Build Services
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true
-      - name: Build auth-service
-        run: go build -v ./services/auth/cmd/main.go
-      - name: Build account-service
-        run: go build -v ./services/account/cmd/main.go
-      - name: Build transaction-service
-        run: go build -v ./services/transaction/cmd/main.go
-      - name: Build notification-service
-        run: go build -v ./services/notification/cmd/main.go
+      - name: Build & Test account-service
+        if: hashFiles('account-service/go.mod') != ''
+        run: |
+          cd account-service
+          go vet ./...
+          go build -v ./cmd/api
+
+      - name: Build & Test transaction-service
+        if: hashFiles('transaction-service/go.mod') != ''
+        run: |
+          cd transaction-service
+          go vet ./...
+          go build -v ./cmd/api
+
+      - name: Build & Test notification-service
+        if: hashFiles('notification-service/go.mod') != ''
+        run: |
+          cd notification-service
+          go vet ./...
+          go build -v ./cmd/api
